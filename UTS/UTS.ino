@@ -1,17 +1,30 @@
+//blynk
+#define BLYNK_TEMPLATE_ID "TMPLv1FbAHhw"
+#define BLYNK_DEVICE_NAME "banjircoba"
+#define BLYNK_AUTH_TOKEN "O0HLiiuj2JIS5M7Y9dUcuPd_BL4e7Gk0"
+
+//blynk
+#define BLYNK_PRINT Serial
+
+#include <ESP8266WiFi.h>
+#include <BlynkSimpleEsp8266.h>
+
+char auth[] = BLYNK_AUTH_TOKEN;
+
+// Replace with your network credentials
+char ssid[] = "De-72";
+char pass[] = "gakdisandi";
+
+
 #define sensorLDR D6
 #define triggerPin  D8
 #define echoPin     D7
 
 #include <dht.h>
 #define sensor 14
-#include <ESP8266WiFi.h>
 #include <WiFiClientSecure.h>
 #include <UniversalTelegramBot.h>
 #include <ArduinoJson.h>
-
-// Replace with your network credentials
-const char* ssid = "De-72";
-const char* password = "gakdisandi";
 
 // Initialize Telegram BOT
 #define BOTtoken "5143804909:AAEF4UDID0sfHaCLFWuZQHAqxsRs0ooAATw"  // your Bot Token (Get from Botfather)
@@ -27,13 +40,15 @@ WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
 
 dht DHT;
+
+BlynkTimer timer;
 String humidity = "Kelembaban : ";
 String temp = "Suhu : ";
 int nilaiSensor = analogRead(sensorLDR);
 
 void cek() {
   DHT.read11(sensor);
-
+  
   Serial.print(temp);
   Serial.println(DHT.temperature);
   Serial.print(humidity);
@@ -55,7 +70,9 @@ void cek() {
   Serial.print("jarak : ");
   Serial.print(jarak);
   Serial.println(" cm"); 
- 
+
+  Blynk.virtualWrite(V4, DHT.temperature);
+
   String hasilTemp = "Suhu: " + String(DHT.temperature)+ " °C";
   String hasilHum = "Kelembaban: " + String(DHT.humidity)+ " %";
   String hasilLDR = "Cuaca: " + cahaya();
@@ -120,7 +137,7 @@ void setup() {
   Serial.println(ssid);
 
   WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
+  //WiFi.begin(ssid, password);
 
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
@@ -132,6 +149,11 @@ void setup() {
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
+   Blynk.begin(auth, ssid, pass);
+
+  // Setup a timer function to be called every second
+  timer.setInterval(1000L, cek);
+  
   bot.sendMessage(CHAT_ID, "Bot started up", "");
   
 }
