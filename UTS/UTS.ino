@@ -16,7 +16,7 @@ char ssid[] = "De-72";
 char pass[] = "gakdisandi";
 
 
-#define sensorLDR D6
+#define sensorLDR 12
 #define triggerPin  D8
 #define echoPin     D7
 
@@ -71,11 +71,12 @@ void cek() {
   Serial.print(jarak);
   Serial.println(" cm"); 
 
-  Blynk.virtualWrite(V4, DHT.temperature);
+  Blynk.virtualWrite(V4, DHT.humidity);
+  Blynk.virtualWrite(V5, DHT.temperature);
 
   String hasilTemp = "Suhu: " + String(DHT.temperature)+ " °C";
   String hasilHum = "Kelembaban: " + String(DHT.humidity)+ " %";
-  String hasilLDR = "Cuaca: " + cahaya();
+  String hasilLDR = "Cuaca: " + nilaiSensor;
   String hasilJrk = "Jarak: " + String(jarak)+" Cm";
   bot.sendMessage(CHAT_ID, hasilTemp, "");
   bot.sendMessage(CHAT_ID, hasilHum, "");
@@ -114,13 +115,13 @@ void cek() {
 }
 
 String cahaya(){
-  String hasil;
-  if(nilaiSensor == 0){
-      hasil = "terang" ;
-  } else {
-      hasil = "mendung";   
-  }
-  return hasil;
+//  String hasil;
+//  if(nilaiSensor == 0){
+//      hasil = "terang" ;
+//  } else {
+//      hasil = "mendung";   
+//  }
+//  return hasil;
 }
 
 void setup() {
