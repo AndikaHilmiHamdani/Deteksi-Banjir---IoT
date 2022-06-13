@@ -16,7 +16,7 @@ char ssid[] = "De-72";
 char pass[] = "gakdisandi";
 
 
-#define sensorLDR 12
+#define sensorLDR D6
 #define triggerPin  D8
 #define echoPin     D7
 
@@ -54,7 +54,7 @@ void cek() {
   Serial.print(humidity);
   Serial.println(DHT.humidity);
   Serial.print("Cahaya: ");
-  Serial.print(cahaya());
+//  Serial.print(cahaya());
   Serial.println(nilaiSensor);
   
 
@@ -71,6 +71,7 @@ void cek() {
   Serial.print(jarak);
   Serial.println(" cm"); 
 
+  Blynk.virtualWrite(V0, nilaiSensor);
   Blynk.virtualWrite(V4, DHT.humidity);
   Blynk.virtualWrite(V5, DHT.temperature);
 
@@ -114,14 +115,9 @@ void cek() {
   
 }
 
-String cahaya(){
-//  String hasil;
-//  if(nilaiSensor == 0){
-//      hasil = "terang" ;
-//  } else {
-//      hasil = "mendung";   
-//  }
-//  return hasil;
+void cahaya(){
+  int nilaiSensor = analogRead(sensorLDR);
+  Serial.println(nilaiSensor);
 }
 
 void setup() {
@@ -160,5 +156,6 @@ void setup() {
 }
 
 void loop() {
+ cahaya();
  cek();
 }
