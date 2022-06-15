@@ -21,17 +21,17 @@ char pass[] = "gakdisandi";
 #define echoPin     D7
 
 #include <dht.h>
-#define sensor 14
+#define sensor D5
 #include <WiFiClientSecure.h>
 #include <UniversalTelegramBot.h>
 #include <ArduinoJson.h>
 
-// Initialize Telegram BOT
+//// Initialize Telegram BOT
 #define BOTtoken "5143804909:AAEF4UDID0sfHaCLFWuZQHAqxsRs0ooAATw"  // your Bot Token (Get from Botfather)
-
-// Use @myidbot to find out the chat ID of an individual or a group
-// Also note that you need to click "start" on a bot before it can
-// message you
+//
+//// Use @myidbot to find out the chat ID of an individual or a group
+//// Also note that you need to click "start" on a bot before it can
+//// message you
 #define CHAT_ID "821934636"
 #define CHAT_Aula "1034450435"
 
@@ -40,25 +40,15 @@ WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
 
 dht DHT;
-
 BlynkTimer timer;
-String humidity = "Kelembaban : ";
+String hum = "Kelembaban : ";
 String temp = "Suhu : ";
-int nilaiSensor = analogRead(sensorLDR);
+String light = "";
+String pesan = "";
+long duration, jarak;
 
 void cek() {
   DHT.read11(sensor);
-  
-  Serial.print(temp);
-  Serial.println(DHT.temperature);
-  Serial.print(humidity);
-  Serial.println(DHT.humidity);
-  Serial.print("Cahaya: ");
-//  Serial.print(cahaya());
-  Serial.println(nilaiSensor);
-  
-
-  long duration, jarak;
 
   digitalWrite(triggerPin, LOW);
   delayMicroseconds(2); 
@@ -67,64 +57,71 @@ void cek() {
   digitalWrite(triggerPin, LOW);
   duration = pulseIn(echoPin, HIGH);
   jarak = (duration/2) / 29.1;
-  Serial.print("jarak : ");
-  Serial.print(jarak);
-  Serial.println(" cm"); 
 
-  Blynk.virtualWrite(V0, nilaiSensor);
-  Blynk.virtualWrite(V4, DHT.humidity);
-  Blynk.virtualWrite(V5, DHT.temperature);
+}
 
+void cahaya(){
+  if(analogRead(sensorLDR)<1000){
+    light = "Terang";
+  }else{
+    light = "Mendung";
+  }
+}
+
+void sendBlynk(){
+  if (jarak < 30){
+    if((DHT.temperature <= 25 && DHT.humidity >= 60) && light.equalsIgnoreCase("Mendung")){
+      pesan = "Waspada air meningkat dan berpotensi curah hujan tinggi";
+    } 
+    else if((DHT.temperature > 25 && DHT.temperature < 29) && (DHT.humidity < 60 && light.equalsIgnoreCase("Terang"))) {
+      pesan = "Hati-hati debit air meningkat, namun cuaca terang";
+    }
+    else {
+      pesan = "Waspada air belum menguap";
+    }
+  }
+   else if(light.equalsIgnoreCase("Mendung")) {
+      pesan = "Kondisi aman, namun cuaca mendung";
+  } else {
+      pesan = "Kondisi aman";
+  }
+    
   String hasilTemp = "Suhu: " + String(DHT.temperature)+ " °C";
   String hasilHum = "Kelembaban: " + String(DHT.humidity)+ " %";
-  String hasilLDR = "Cuaca: " + nilaiSensor;
+  String hasilLDR = "Cuaca: " +  light + " (" + analogRead(sensorLDR) + ")";
   String hasilJrk = "Jarak: " + String(jarak)+" Cm";
-  bot.sendMessage(CHAT_ID, hasilTemp, "");
-  bot.sendMessage(CHAT_ID, hasilHum, "");
-  bot.sendMessage(CHAT_ID, hasilLDR, "");
-  bot.sendMessage(CHAT_ID, hasilJrk, "");
 
+  Serial.println(hasilTemp);
+  Serial.println(hasilHum);
+  Serial.println(hasilLDR);
+  Serial.println(hasilJrk);
+  
+  Serial.println(pesan);
+  Blynk.virtualWrite(V0, analogRead(sensorLDR));
+  Blynk.virtualWrite(V4, DHT.humidity);
+  Blynk.virtualWrite(V5, DHT.temperature);
+  Blynk.virtualWrite(V6, light);
+  Blynk.virtualWrite(V7, jarak);
+  Blynk.virtualWrite(V1, pesan);
+
+//  bot.sendMessage(CHAT_ID, hasilTemp, "");
+//  bot.sendMessage(CHAT_ID, hasilHum, "");
+//  bot.sendMessage(CHAT_ID, hasilLDR, "");
+//  bot.sendMessage(CHAT_ID, hasilJrk, "");
+//  bot.sendMessage(CHAT_ID, pesan, "");
+  
   bot.sendMessage(CHAT_Aula, hasilTemp, "");
   bot.sendMessage(CHAT_Aula, hasilHum, "");
   bot.sendMessage(CHAT_Aula, hasilLDR, "");
   bot.sendMessage(CHAT_Aula, hasilJrk, "");
-
-   if (jarak < 30){
-    if(DHT.temperature <= 25 && DHT.humidity >= 60) {
-      Serial.println("Waspada air meningkat dan berpotensi curah hujan tinggi");
-      bot.sendMessage(CHAT_ID, "Waspada air meningkat dan berpotensi curah hujan tinggi", "");
-      bot.sendMessage(CHAT_Aula, "Waspada air meningkat dan berpotensi curah hujan tinggi", "");
-    } 
-    else if((DHT.temperature > 25 && DHT.temperature < 29) && DHT.humidity < 60) {
-      Serial.println("Hati-hati debit air meningkat, namun cuaca cerah");
-      bot.sendMessage(CHAT_ID, "Hati-hati debit air meningkat, namun cuaca cerah", "");
-      bot.sendMessage(CHAT_Aula, "Hati-hati debit air meningkat, namun cuaca cerah", "");
-    }
-    else {
-      Serial.println("Waspada air belum menguap");
-      bot.sendMessage(CHAT_ID, "Waspada air belum menguap", "");
-      bot.sendMessage(CHAT_Aula, "Waspada air belum menguap", "");
-    }
-  }
-   else {
-      Serial.println("Kondisi aman");
-      bot.sendMessage(CHAT_ID, "Kondisi aman", "");
-      bot.sendMessage(CHAT_Aula, "Kondisi aman", "");
-    }
-  delay(1000);
-  
-}
-
-void cahaya(){
-  int nilaiSensor = analogRead(sensorLDR);
-  Serial.println(nilaiSensor);
+  bot.sendMessage(CHAT_Aula, pesan, "");
 }
 
 void setup() {
   pinMode(triggerPin, OUTPUT);
   pinMode(echoPin, INPUT);
   Serial.begin(9600);
-  Serial.println("Contoh Penggunaan Sensor LDR");
+//  Serial.println("Contoh Penggunaan Sensor LDR");
   delay(3000);
 
   configTime(0, 0, "pool.ntp.org");      // get UTC time via NTP
@@ -134,7 +131,7 @@ void setup() {
   Serial.println(ssid);
 
   WiFi.mode(WIFI_STA);
-  //WiFi.begin(ssid, password);
+  WiFi.begin(ssid, pass);
 
   while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
@@ -158,4 +155,5 @@ void setup() {
 void loop() {
  cahaya();
  cek();
+ sendBlynk();
 }
