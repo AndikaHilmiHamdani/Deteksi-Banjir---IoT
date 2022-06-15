@@ -79,8 +79,7 @@ void sendBlynk(){
     else {
       pesan = "Waspada air belum menguap";
     }
-  }
-   else if(light.equalsIgnoreCase("Mendung")) {
+  } else if(light.equalsIgnoreCase("Mendung")) {
       pesan = "Kondisi aman, namun cuaca mendung";
   } else {
       pesan = "Kondisi aman";
